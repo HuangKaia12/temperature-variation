@@ -12,8 +12,7 @@ The dedicated old documentation webpage for this dataset has been retired. The p
 The horizontal axis represents day‑of‑year to show seasonal change, and vertical axis plots years, with older years placed at top and newer years at bottom. Colour encodes daily mean temperature, with warmer tones representing higher values. A text annotation highlights the 1940‑1946 observation gap during WWII. This visualisation discards precise calendar timestamps and short‑term weather events, focusing only on aggregated daily temperature patterns.
 
 ## Run it
-This project uses uv for dependency management.
-
-Install dependencies:
 ```bash
 uv sync
+uv run fetch.py
+uv run plot.py
