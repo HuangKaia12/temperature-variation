@@ -1,85 +1,68 @@
-# /// script
-# requires-python = ">=3.10"
-# dependencies = ["matplotlib","requests"]
-# ///
-import json
 import matplotlib.pyplot as plt
-from datetime import datetime
-import os
+import pandas as pd
 
-def main():
-    json_path = "data/clmtemp.json"
-    if not os.path.exists(json_path):
-        raise FileNotFoundError("Run uv run fetch.py first")
+# 读取数据
+df = pd.read_csv("data/hko-daily-mean-temperature-2026.csv")
 
-    with open(json_path,"r",encoding="utf-8") as f:
-        raw = json.load(f)
+# 计算一年当中的天数
+df["day_of_year"] = pd.to_datetime({
+    "year": df["year"],
+    "month": df["month"],
+    "day": df["day"]
+}).dt.dayofyear
 
-    rows = raw["data"]
+# 创建画布
+fig, ax = plt.subplots(figsize=(14, 9), dpi=120)
 
-    day_of_year = []
-    temp_values = []
-    temp_sizes = []
-    year_pos = []
-    skipped = 0
+# 绘制散点图
+scatter = ax.scatter(
+    data=df,
+    x="day_of_year",
+    y="year",
+    c="daily_mean_temp",
+    cmap="magma",
+    alpha=0.8,
+    s=60
+)
 
-    # loop over dataset (required for assignment)
-    for r in rows:
-        try:
-            y = int(r[0])
-            m = int(r[1])
-            d = int(r[2])
-            t = float(r[3])
-            dt = datetime(y,m,d)
-            day_of_year.append(dt.timetuple().tm_yday)
-            year_pos.append(y)
-            temp_values.append(t)
-            temp_sizes.append(t * 2.8)
-        except Exception:
-            skipped +=1
+# Y轴翻转：最上方旧年份(1890)，最下方新年份(2025)
+ax.invert_yaxis()
 
-    print(f"Valid points:{len(day_of_year)}, skipped:{skipped}")
+# 图表标题与坐标轴标签
+ax.set_title("Hong Kong Daily Mean Temperature Variation (Full Historical Dataset)", pad=16)
+ax.set_xlabel("Day of Year", fontsize=11)
+ax.set_ylabel("Year", fontsize=11)
 
-    fig, ax = plt.subplots(figsize=(12,6),dpi=150)
-    bg_color = "#070720"
-    fig.patch.set_facecolor(bg_color)
-    ax.set_facecolor(bg_color)
+# X轴月份刻度
+ax.set_xticks([1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335])
+ax.set_xticklabels(["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
 
-    scatter = ax.scatter(
-        day_of_year, year_pos,
-        s=temp_sizes,
-        c=temp_values,   # 颜色使用原始温度，不是放大后的size
-        cmap="magma",
-        alpha=0.72,
-        edgecolors="none"
+# Y轴年份刻度 + 边界，防止贴边
+ax.set_yticks([1890, 1920, 1940, 1950, 1980, 2010, 2025])
+ax.set_ylim(2030, 1880)
+
+# Gap注释，完全置于空白间隙正中
+ax.text(
+    x=240,
+    y=1943,
+    s="Gap: No observations\n1940‑1946 (WWII suspension)",
+    ha="center",
+    va="center",
+    fontsize=9,
+    color="black",
+    bbox=dict(
+        facecolor="white",
+        alpha=0.85,
+        edgecolor="gray",
+        boxstyle="round,pad=0.35"
     )
+)
 
-    ax.set_title("Hong Kong Daily Mean Temperature Variation", color="white", fontsize=13, pad=14)
-    ax.set_xlabel("Day of Year", color="white", labelpad=10)
-    ax.set_ylabel("Year", color="white", labelpad=10)
+# 右侧色条
+cbar = plt.colorbar(scatter)
+cbar.set_label("Mean Temperature (°C)")
 
-    month_ticks = [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335]
-    month_labels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
-    ax.set_xticks(month_ticks)
-    ax.set_xticklabels(month_labels, color="white", fontsize=9)
-
-    ax.tick_params(axis="y", colors="white", labelsize=9)
-    ax.tick_params(axis="x", colors="white")
-
-    cbar = plt.colorbar(scatter, ax=ax)
-    cbar.set_label("Mean Temperature (°C)", color="white", fontsize=9)
-    cbar.ax.yaxis.label.set_color('white')
-    plt.setp(cbar.ax.get_yticklabels(), color='white', fontsize=8)
-
-    ax.text(0.98, 0.02, "Data source: HKO CLMTEMP Open API",
-            transform=ax.transAxes, ha="right", va="bottom", fontsize=8, color="#cccccc")
-
-    os.makedirs("out", exist_ok=True)
-    out_file = "out/thermal_variation.png"
-    plt.tight_layout()
-    plt.savefig(out_file, bbox_inches="tight", pad_inches=0.4)
-    plt.close()
-    print(f"Output: {out_file}")
-
-if __name__ == "__main__":
-    main()
+plt.tight_layout()
+plt.savefig("out/full_temp_plot.png")
+plt.show()
