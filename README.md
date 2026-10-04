@@ -1,34 +1,23 @@
-# The phenomenon
 
-<!-- This is the SD5913 assignment 2 template. Everything in this file is yours to
-replace, and the check counts words: comments like this one are not words, so
-delete each one as you write. Start with the heading: name the phenomenon.
-
-Then, in this order, at least 150 words in total.
-
-New to folders, paths, or the files here whose names start with a dot? Read
-https://github.com/sd5913/pfad/blob/2026/reference/files.md first. Ten minutes. -->
-
-![what the picture is](out/plot.png)
+```markdown
+![Hong Kong historical daily mean temperature heat‑scatter plot](out/full_temp_plot.png)
 
 ## The phenomenon
-
-<!-- What goes up and down, and why you looked at it. -->
+Surface air temperature shows strong seasonal cycles every year, while long‑term records also reveal multi‑decadal climate variation in Hong Kong. This visualisation explores how daily mean temperature changes across seasons and over more than one century. We examine both repeating annual summer‑winter temperature cycles and historical gaps in meteorological observations caused by World War II.
 
 ## The source
+Data comes from Hong Kong Observatory CLMTEMP open API. Each row represents one calendar day, containing year, month, day and daily‑mean air temperature in degrees Celsius. The full dataset spans 1890‑2025, with roughly 49 000 daily observations.
 
-<!-- A link to the page or endpoint the file came from, and one line on what is in
-the file: how many rows, what a row means, what the units are. -->
+API endpoint: https://www.hko.gov.hk/tc/gts/CLMTEMP_API.htm
 
 ## What the picture shows
-
-<!-- Two or three sentences. Including what it hides: every transformation throws
-something away, and naming what yours threw away is the easiest way to sound like
-you know what you did. -->
+The horizontal axis represents day‑of‑year to show seasonal change, and vertical axis plots years, with older years placed at top and newer years at bottom. Colour encodes daily mean temperature, with warmer tones representing higher values. A text annotation highlights the 1940‑1946 observation gap during WWII. This visualisation discards precise calendar timestamps and short‑term weather events, focusing only on aggregated daily temperature patterns.
 
 ## Run it
+### Environment
+- Python >= 3.10
+- Dependencies: `pandas`, `matplotlib`, `requests`
 
-```
-uv run fetch.py
-uv run plot.py
-```
+Install required packages:
+```bash
+pip install pandas matplotlib requests
