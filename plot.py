@@ -2,66 +2,64 @@
 # requires-python = ">=3.10"
 # dependencies = ["matplotlib"]
 # ///
-
-"""
-Read the file in data/, make one picture, save it to out/.
-
-    uv run plot.py
-
-Three parts, and you will replace all three: rows() reads the file the way *your*
-file needs reading, the loop in main() picks the numbers out of it, and the plot at
-the bottom is the transformation you chose. Print before you plot.
-"""
-
-import csv
-from pathlib import Path
-
+import json
 import matplotlib.pyplot as plt
-
-FILE = "hko-daily-mean-temperature-2026.csv"   # CHANGE ME: the same name as in fetch.py
-PICTURE = "plot.png"                           # what goes into out/, and into the README
-
-HERE = Path(__file__).parent
-DATA = HERE / "data" / FILE
-OUT = HERE / "out"
-
-
-def rows(path):
-    """The file as a list of lists, one per line. The Observatory puts three lines
-    of titles above the table and a legend below it, so keep only the lines that
-    start with a year."""
-    kept = []
-    with path.open(encoding="utf-8-sig", newline="") as handle:
-        for line in csv.reader(handle):
-            if line and line[0].isdigit():
-                kept.append(line)
-    return kept
-
+from datetime import datetime
+import os
 
 def main():
-    table = rows(DATA)
-    print(f"{DATA.name}: {len(table)} rows. The first one: {table[0]}")
+    json_path = "data/clmtemp.json"
+    if not os.path.exists(json_path):
+        raise FileNotFoundError("Run uv run fetch.py first")
 
-    days, values = [], []
-    for i, (year, month, day, value, quality) in enumerate(table):   # the loop over the numbers
-        if value == "***":                   # the Observatory's word for "missing"
-            continue
-        days.append(i + 1)
-        values.append(float(value))          # it arrived as text; make it a number
-    print(f"{len(values)} values, from {min(values)} to {max(values)}")
+    with open(json_path,"r",encoding="utf-8") as f:
+        raw = json.load(f)
 
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(days, values, color="#d6591d", linewidth=1.5)
-    ax.set_xlabel("day of 2026")
-    ax.set_ylabel("daily mean temperature, °C")
-    ax.set_title("Hong Kong Observatory, 2026 so far")
-    fig.tight_layout()
+    fields = raw["fields"]
+    print("==== REAL FIELDS ====")
+    print(fields)
+    print("====================")
+    rows = raw["data"]
 
-    OUT.mkdir(exist_ok=True)
-    fig.savefig(OUT / PICTURE, dpi=150)
-    print(f"saved out/{PICTURE}")
-    plt.show()
+    day_of_year = []
+    temp_sizes = []
+    year_pos = []
+    skipped = 0
 
+    for r in rows:
+        try:
+            y = int(r[0])
+            m = int(r[1])
+            d = int(r[2])
+            t = float(r[3])
+            dt = datetime(y,m,d)
+            day_of_year.append(dt.timetuple().tm_yday)
+            year_pos.append(y)
+            temp_sizes.append(t*4)
+        except Exception:
+            skipped +=1
+
+    print(f"Valid points:{len(day_of_year)}, skipped:{skipped}")
+
+    fig, ax = plt.subplots(figsize=(12,6),dpi=150)
+    ax.set_facecolor("#070720")
+    fig.patch.set_facecolor("#070720")
+
+    ax.scatter(
+        day_of_year, year_pos,
+        s=temp_sizes,
+        c=temp_sizes,
+        cmap="magma",
+        alpha=0.7,
+        edgecolors="none"
+    )
+    ax.axis("off")
+
+    os.makedirs("out",exist_ok=True)
+    out_file = "out/thermal_variation.png"
+    plt.savefig(out_file, bbox_inches="tight", pad_inches=0)
+    plt.close()
+    print(f"Output: {out_file}")
 
 if __name__ == "__main__":
     main()

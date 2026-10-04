@@ -2,44 +2,23 @@
 # requires-python = ">=3.10"
 # dependencies = ["requests"]
 # ///
-
-"""
-Fetch the numbers once, save the raw reply to data/, and never fetch again.
-
-    uv run fetch.py
-
-Change URL and FILE. The default is the Hong Kong Observatory's daily mean
-temperature for 2026, so the template runs before you have touched it and you
-can see what a file looks like when it arrives. It is an example, not your
-phenomenon: handing it in unchanged is handing in nothing.
-"""
-
-from pathlib import Path
-
 import requests
+import json
+import os
 
-URL = ("https://data.weather.gov.hk/weatherAPI/opendata/opendata.php"
-       "?dataType=CLMTEMP&rformat=csv&station=HKO&year=2026")      # CHANGE ME
-FILE = "hko-daily-mean-temperature-2026.csv"                          # CHANGE ME: say what it is,
-                                                                      # keep the publisher's extension
-HERE = Path(__file__).parent
-DATA = HERE / "data"
+def main():
+    url = "https://data.weather.gov.hk/weatherAPI/opendata/opendata.php?dataType=CLMTEMP&station=HKO&rformat=json&year=2023"
+    out_path = "data/clmtemp.json"
+    os.makedirs("data", exist_ok=True)
 
+    print("Fetch HKO CLMTEMP json (daily mean temperature)")
+    resp = requests.get(url, timeout=30)
+    resp.raise_for_status()
+    data = resp.json()
 
-def fetch(url, path):
-    """Ask for the file once. If it is already in data/, do nothing."""
-    if path.exists():
-        print(f"data/{path.name} is already here ({path.stat().st_size // 1024} KB). "
-              "Delete it to fetch again.")
-        return path
-    DATA.mkdir(exist_ok=True)
-    print(f"asking {url}")
-    reply = requests.get(url, timeout=60, headers={"User-Agent": "SD5913 PolyU student"})
-    reply.raise_for_status()
-    path.write_bytes(reply.content)      # the raw reply, byte for byte: what arrived is what gets committed
-    print(f"saved data/{path.name} ({path.stat().st_size // 1024} KB). Now: git add data")
-    return path
-
+    with open(out_path,"w",encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"Saved → {out_path}")
 
 if __name__ == "__main__":
-    fetch(URL, DATA / FILE)
+    main()
