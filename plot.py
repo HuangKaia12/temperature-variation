@@ -1,4 +1,13 @@
-import matplotlib.pyplot as plt
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#   "matplotlib",
+#   "requests"
+# ]
+# ///
+
+import requests
+import json
 import pandas as pd
 
 # 读取数据

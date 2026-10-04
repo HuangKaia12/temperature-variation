@@ -1,3 +1,10 @@
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#   "matplotlib",
+#   "requests",
+# ]
+# ///
 import requests
 import json
 import csv
@@ -32,7 +39,7 @@ def main():
             "daily_mean_temp": float(val)
         })
 
-    # 这里！！！文件名不要带空格
+    # 
     csv_path = "data/hko-daily-mean-temperature-2026.csv"
     with open(csv_path, "w", newline="", encoding="utf‑8") as fout:
         writer = csv.DictWriter(fout, fieldnames=["year", "month", "day", "daily_mean_temp"])
